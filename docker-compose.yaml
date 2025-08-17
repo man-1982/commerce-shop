@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-shop}
+    ports: ["5432:5432"]
+    volumes: [ "dbdata:/var/lib/postgresql/data" ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-shop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    image: node:22-alpine                       # use existing Node 22 image
+    working_dir: /app
+    volumes:
+      - .:/app                                  # your source
+      - pnpm-store:/root/.local/share/pnpm      # cache pnpm store
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT}
+      JWT_SECRET: ${JWT_SECRET:-very-secret-key}
+      JWT_EXPIRES: ${JWT_EXPIRES:-1h}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-shop}
+    # Enable corepack, activate pnpm@packageManager, install deps, start Nest dev server
+    command: >
+      sh -c "npm ci && npm run start:dev"
+    ports: ["${PORT}:${PORT}"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  shopnet:
+
+volumes:
+  dbdata:
+  pnpm-store:
