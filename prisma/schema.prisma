@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  uid       Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  role      String   @default("autorised") // TODO can be Entity as well
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  status    Boolean  @default(true) @db.Boolean
+  Cart      Cart[]
+
+  @@index([uid, status])
+}
+
+model Image {
+  mid       Int     @id @default(autoincrement())
+  uuid      String  @unique @default(uuid()) @db.Uuid
+  imageData String
+  title     String? @db.VarChar(64)
+  product   Product @relation(fields: [pid], references: [pid])
+  pid       Int
+}
+
+model Stock {
+  sid       Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  qty       Int      @default(0)
+  product   Product  @relation(fields: [pid], references: [pid])
+  pid       Int
+  event     String   @db.VarChar(64) // TODO add separate event entity for stock inflow, outflow, deffect, write-off
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sid, pid, event])
+}
+
+model Product {
+  pid         Int        @id @default(autoincrement())
+  uuid        String     @unique @default(uuid()) @db.Uuid
+  title       String     @db.VarChar(64)
+  sku         String     @db.VarChar(64)
+  price       Decimal    @db.Decimal(8, 2) // TODO Price also can be as Entity
+  description String?    @db.VarChar(2048)
+  photos      Image[]
+  status      Boolean    @default(true) @db.Boolean
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  Stock       Stock[]
+  CartItem    CartItem[]
+
+  @@index([pid, status]) // TODO consider add title to index
+}
+
+model Cart {
+  cid       Int        @id @default(autoincrement())
+  uuid      String     @unique @default(uuid()) @db.Uuid
+  uid       Int
+  user      User       @relation(fields: [uid], references: [uid])
+  cartItems CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    Boolean    @default(true)
+
+  @@index([cid, status, uid])
+}
+
+model CartItem {
+  ci_id     Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  cartId    Int
+  pid       Int
+  product   Product  @relation(fields: [pid], references: [pid])
+  quantity  Int      @default(1)
+  price     Decimal  @db.Decimal(8, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Cart Cart[]
+
+  @@index([ci_id, pid])
+}
