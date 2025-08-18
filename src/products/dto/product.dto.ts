@@ -1,17 +1,35 @@
 import {
   IsBoolean,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
   IsString,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 
 // TODO Some intresting hack with declare.
-export class CreateProductDto {
+export class ProductDto {
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 1,
+    description: 'The unique identifier of the product.',
+  })
+  pid: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'some-uuid-string',
+    description: 'The unique uuid of the product.',
+  })
+  uuid: string;
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(64)
@@ -49,7 +67,7 @@ export class CreateProductDto {
   @IsString()
   @MaxLength(2048)
   @ApiProperty({
-    example: 'A very useful widget.',
+    example: 'A very useful product. the best one',
     description: 'The product description.',
     nullable: true,
   })
@@ -61,27 +79,13 @@ export class CreateProductDto {
     example: true,
     description: 'The true or false status of the product.',
   })
+  @Type(() => Boolean)
   status?: boolean = true;
-}
 
-export class UpdateProductDto extends CreateProductDto {}
-
-export class ProductDto extends CreateProductDto {
-  @IsNumber()
-  @IsNotEmpty()
-  @ApiProperty({
-    example: 1,
-    description: 'The unique identifier of the product.',
-  })
-  pid: number;
-
-  @IsString()
-  @IsNotEmpty()
-  @ApiProperty({
-    example: 'some-uuid-string',
-    description: 'The unique uuid of the product.',
-  })
-  uuid: string;
+  @IsInt()
+  @Min(0)
+  @IsOptional({ message: 'It si default to 1 on create' })
+  quantity: number;
 
   @IsString()
   @IsNotEmpty()
@@ -99,3 +103,16 @@ export class ProductDto extends CreateProductDto {
   })
   updatedAt: Date;
 }
+
+export class CreateProductDto extends OmitType(ProductDto, [
+  'pid',
+  'uuid',
+  'createdAt',
+  'updatedAt',
+] as const) {}
+export class UpdateProductDto extends OmitType(ProductDto, [
+  'pid',
+  'uuid',
+  'createdAt',
+  'updatedAt',
+] as const) {}
