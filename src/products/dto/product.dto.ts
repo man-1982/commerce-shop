@@ -61,7 +61,7 @@ export class CreateProductDto {
     example: true,
     description: 'The true or false status of the product.',
   })
-  status?: boolean;
+  status?: boolean = true;
 }
 
 export class UpdateProductDto extends CreateProductDto {}
@@ -89,7 +89,7 @@ export class ProductDto extends CreateProductDto {
     example: '2023-01-01T12:00:00Z',
     description: 'The creation date of the product.',
   })
-  createdAt: string;
+  createdAt: Date;
 
   @IsString()
   @IsNotEmpty()
@@ -97,5 +97,5 @@ export class ProductDto extends CreateProductDto {
     example: '2023-01-01T12:00:00Z',
     description: 'The last update date of the product.',
   })
-  updatedAt: string;
+  updatedAt: Date;
 }
