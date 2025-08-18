@@ -27,7 +27,7 @@ export class ProductsController {
   constructor(private readonly products: ProductsService) {}
 
   /**
-   * Create a new product
+   * Create a new product.
    * @param product
    */
   @Post()
@@ -44,7 +44,7 @@ export class ProductsController {
   }
 
   /**
-   * Entirely update/replace product by pid
+   * Entirely update/replace product by pid.
    * @param pid
    * @param product
    */
@@ -64,7 +64,7 @@ export class ProductsController {
   }
 
   /**
-   * Find product by product pid
+   * Find product by product pid.
    * @param pid
    */
   @Get(':pid')
