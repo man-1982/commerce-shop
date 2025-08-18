@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
@@ -10,12 +12,14 @@ import {
 } from '@nestjs/common';
 import {
   ApiBody,
+  ApiExtraModels,
   ApiOperation,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
-import { CreateProductDto, UpdateProductDto } from './dto';
+import { CreateProductDto, ProductDto, UpdateProductDto } from './dto';
+import { Product } from '@prisma/client';
 
 @ApiTags('products')
 @Controller('products')
@@ -27,15 +31,16 @@ export class ProductsController {
    * @param product
    */
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @ApiBody({
     type: CreateProductDto,
     isArray: false,
     required: true,
     description: 'Create product',
   })
-  create(@Body() product: CreateProductDto) {
+  create(@Body() product: CreateProductDto): Promise<Product> {
     //console.log(product);
-    this.products.create(product);
+    return this.products.create(product);
   }
 
   /**
@@ -54,7 +59,7 @@ export class ProductsController {
   updateById(
     @Param('pid', new ParseIntPipe()) pid: number,
     @Body() product: UpdateProductDto,
-  ) {
+  ): Promise<Product> {
     return this.products.updateById(pid, product);
   }
 
@@ -64,14 +69,18 @@ export class ProductsController {
    */
   @Get(':pid')
   @ApiParam({ name: 'pid', required: true, description: 'Product id' })
-  findById(@Param('pid', new ParseIntPipe()) pid: number) {
-    return { msg: 'findById' };
+  findById(
+    @Param('pid', new ParseIntPipe()) pid: number,
+  ): Promise<Product | null> {
+    return this.products.findById(pid);
   }
 
   @Delete(':pid')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete product by pid' })
+  @ApiExtraModels(ProductDto)
   @ApiParam({ name: 'pid', required: true, description: 'Product id' })
-  deleteById(@Param('pid', new ParseIntPipe({})) pid: number) {
-    return { msg: 'deleteById' };
+  deleteById(@Param('pid', new ParseIntPipe({})) pid: number): Promise<null> {
+    return this.products.deleteById(pid);
   }
 }
