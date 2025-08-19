@@ -39,6 +39,29 @@ export class CartDto {
   })
   uid: number;
 
+  @IsInt()
+  @Min(0)
+  @IsOptional({ message: 'It is  default to 1 on create' })
+  quantity: number;
+
+  @IsPositive()
+  @Type(() => Number)
+  // Ensures transformation from string if needed (e.g., from query params or form-data)
+  price: number;
+
+  @IsPositive()
+  @Type(() => Number)
+  // Ensures transformation from string if needed (e.g., from query params or form-data)
+  amount: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 11,
+    description: 'The pid of the product in the cart.',
+  })
+  pid: number;
+
   @IsOptional()
   @IsBoolean()
   @ApiProperty({
