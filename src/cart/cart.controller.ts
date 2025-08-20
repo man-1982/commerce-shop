@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -118,5 +119,27 @@ export class CartController {
   @Patch(':cid/close')
   closeCart(@Param('cid', ParseIntPipe) cid: number) {
     return this.cartService.closeCart(cid);
+  }
+
+  @Delete(':cid')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({
+    name: 'cid',
+    required: true,
+    description: 'The cart ccid to delete',
+  })
+  @ApiOperation({
+    summary: 'Delete a cart by its cid.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Successfully deleted',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Cart not found',
+  })
+  async deleteCart(@Param('cid', ParseIntPipe) cid: number): Promise<void> {
+    this.cartService.deleteCart(cid);
   }
 }

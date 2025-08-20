@@ -2,24 +2,25 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddToCartDto, CartDto, CreateCartDto, RemoveItemDto } from './dto';
 import { Cart, Prisma, Product } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class CartService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async createCart(dto: CreateCartDto) {
-    const { uid, pid, quantity } = dto;
+    const newCart = await this.prisma.$transaction(async (tx) => {
+      const { uid, pid, quantity } = dto;
 
-    return this.prisma.$transaction(async (tx) => {
-      const existingCartItem = await tx.cart.findFirst({
+      const existingCart = await tx.cart.findFirst({
         where: { uid, pid },
       });
 
-      if (existingCartItem) {
-        throw new HttpException(
-          'Cart item already exists',
-          HttpStatus.CONFLICT,
-        );
+      if (existingCart) {
+        throw new HttpException('Cart already exists', HttpStatus.CONFLICT);
       }
 
       const product = await this.getProduct(tx, pid);
@@ -36,18 +37,31 @@ export class CartService {
         },
       });
     });
+
+    // Notification: Cart created
+    this.eventEmitter.emit('cart.created', { cart: newCart });
+
+    // Notification: Cart items were updated
+    this.eventEmitter.emit('cart.items.updated', {
+      item: {
+        pid: newCart.pid,
+        cid: newCart.cid,
+        quantity: newCart.quantity,
+      },
+    });
+    return newCart;
   }
 
   async addToCart(dto: AddToCartDto) {
-    const { cid, pid, quantity } = dto;
+    const updatedCartItem = await this.prisma.$transaction(async (tx) => {
+      const { uid, pid, quantity } = dto;
 
-    return this.prisma.$transaction(async (tx) => {
       const cartItem = await tx.cart.findFirst({
-        where: { cid, pid },
+        where: { uid, pid },
       });
 
       if (!cartItem) {
-        throw new HttpException(`Cart item not found`, HttpStatus.CONFLICT);
+        throw new HttpException(`Cart item not found`, HttpStatus.NOT_FOUND);
       }
 
       const product = await this.getProduct(tx, pid);
@@ -62,14 +76,17 @@ export class CartService {
         },
       });
     });
+
+    this.eventEmitter.emit('cart.items.updated', {
+      item: {
+        pid: updatedCartItem.pid,
+        cid: updatedCartItem.cid,
+        quantity: dto.quantity,
+      },
+    });
+    return updatedCartItem;
   }
 
-  /**
-   * Get the product by id
-   * @param tx
-   * @param pid
-   * @private
-   */
   private async getProduct(
     tx: Prisma.TransactionClient,
     pid: number,
@@ -84,11 +101,6 @@ export class CartService {
     return product;
   }
 
-  /**
-   * Get cart by id
-   * @param cid
-   * @param includeProduct
-   */
   async getCart(cid: number, includeProduct: boolean = true) {
     const cart = await this.prisma.cart.findFirst({
       where: { cid: cid },
@@ -96,13 +108,14 @@ export class CartService {
         product: includeProduct,
       },
     });
+    if (!cart) {
+      throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+    }
     return cart;
   }
 
-  /**
-   * Remove/Update quantity of the product item from the cart
-   * @param cid
-   * @param removeItemDto
+  /*
+  Remove some quantity of the product from the cart
    */
   async removeItem(cid: number, removeItemDto: RemoveItemDto) {
     const result = await this.prisma.$transaction(async (tx) => {
@@ -130,20 +143,51 @@ export class CartService {
       });
       return cart;
     });
+
+    // Notification: Cart items were updated
+    this.eventEmitter.emit('cart.items.updated', {
+      item: {
+        pid: result.pid,
+        cid: result.cid,
+        quantity: -removeItemDto.quantity,
+      },
+    });
+
     return result;
   }
 
-  async closeCart(cid: number) {
-    try {
-      const result = await this.prisma.cart.update({
-        where: { cid: cid },
-        data: { status: false },
-      });
+  async closeCart(cid: number): Promise<CartDto> {
+    const result = await this.prisma.cart.update({
+      where: { cid: cid, status: true },
+      data: { status: false },
+    });
 
-      return result;
-    } catch (error) {
-      // TODO: Response can have a vulnerability
-      throw new HttpException(`Cart doesn't exist`, HttpStatus.BAD_REQUEST);
-    }
+    const cart: CartDto = {
+      ...result,
+      price: result.price.toNumber(),
+      amount: result.amount.toNumber(),
+    };
+    // Notification: Cart closed
+    this.eventEmitter.emit('cart.closed', { cart: cart });
+
+    return cart;
+  }
+
+  /**
+   *  Delete cart by cid
+   * @param cid
+   */
+  async deleteCart(cid: number): Promise<void> {
+    const cart = await this.getCart(cid);
+    const deletedCart = await this.prisma.cart.delete({
+      where: { cid: cid },
+    });
+    const cartDto: CartDto = {
+      ...cart,
+      price: cart.price.toNumber(),
+      amount: cart.amount.toNumber(),
+    };
+    // Notification: Cart deleted
+    this.eventEmitter.emit('cart.deleted', { cart: cartDto });
   }
 }
