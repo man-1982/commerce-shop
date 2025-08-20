@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
@@ -13,36 +14,56 @@ import {
   ApiBody,
   ApiOperation,
   ApiParam,
-  ApiProperty,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { AddToCartDto, CreateCartDto, RemoveItemDto } from './dto';
+import { Cart } from '@prisma/client';
 
 @ApiTags('Cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-  /*
-  Add item to the cart or create new cart with item.
-  Also set up status to true for the closed cart.
-   */
-  @Post('add')
+  @Post()
   @ApiBody({
-    type: AddToCartDto,
-    description:
-      'Add product to the cart or create new cart. Setup status closed cart to active',
+    type: CreateCartDto,
+    description: 'Create a new cart with an initial item.',
   })
   @ApiOperation({
-    summary:
-      'Add product to the cart or create new cart. Also update status closed cart to active',
+    summary: 'Create a new cart with an initial item.',
   })
-  addToCart(@Body() addToCartDto: AddToCartDto | CreateCartDto) {
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Successfully created',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'Cart for the user already exists',
+  })
+  createCart(@Body() createCartDto: CreateCartDto) {
+    return this.cartService.createCart(createCartDto);
+  }
+
+  /**
+   * Add to cart.
+   * @param addToCartDto
+   */
+  @Patch('add')
+  @ApiBody({
+    type: AddToCartDto,
+    description: 'Add quantity to an existing item in the cart.',
+  })
+  @ApiOperation({
+    summary: 'Add quantity to an existing item in the cart.',
+  })
+  addToCart(@Body() addToCartDto: AddToCartDto) {
     return this.cartService.addToCart(addToCartDto);
   }
 
-  /*
-  Get cart with product list
+  /**
+   * Get user cart
+   * @param cid
    */
   @Get(':cid')
   @ApiParam({
@@ -53,10 +74,19 @@ export class CartController {
   @ApiOperation({
     summary: 'Get product from the cart.',
   })
-  getCart(@Param('cid', ParseIntPipe) cid: number) {
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully found',
+  })
+  getCart(@Param('cid', ParseIntPipe) cid: number): Promise<Cart | null> {
     return this.cartService.getCart(cid);
   }
 
+  /**
+   * Remove/Update quantity of the product item from the cart
+   * @param cid
+   * @param removeItemDto
+   */
   @ApiParam({
     name: 'cid',
     required: true,
@@ -85,7 +115,7 @@ export class CartController {
   @ApiOperation({
     summary: 'Change status cart to false or closed',
   })
-  @Patch(':id/close')
+  @Patch(':cid/close')
   closeCart(@Param('cid', ParseIntPipe) cid: number) {
     return this.cartService.closeCart(cid);
   }

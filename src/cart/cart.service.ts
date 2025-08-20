@@ -1,59 +1,94 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddToCartDto, CartDto, CreateCartDto, RemoveItemDto } from './dto';
-import { Prisma } from '@prisma/client';
+import { Cart, Prisma, Product } from '@prisma/client';
 
 @Injectable()
 export class CartService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async addToCart(dto: AddToCartDto | CreateCartDto) {
-    const { uid, pid } = dto;
-    const quantity = dto.quantity;
+  async createCart(dto: CreateCartDto) {
+    const { uid, pid, quantity } = dto;
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      // TODO: Avoid references to product table
-      const product = await tx.product.findUnique({ where: { pid } });
-      if (!product)
-        throw new HttpException(
-          `The product with ${pid} not found`,
-          HttpStatus.BAD_REQUEST,
-        );
-      // by default product.price is prisma.decimal
-      const price: number = product.price.toNumber();
-
-      let cart = await tx.cart.findFirst({
-        where: { uid: uid, pid: pid },
+    return this.prisma.$transaction(async (tx) => {
+      const existingCartItem = await tx.cart.findFirst({
+        where: { uid, pid },
       });
 
-      if (cart) {
-        // get total quantity
-        const newQuantity = cart.quantity + quantity;
-        cart = await tx.cart.update({
-          where: { cid: cart.cid },
-          data: {
-            quantity: newQuantity,
-            amount: new Prisma.Decimal(price * newQuantity),
-          },
-        });
-      } else {
-        cart = await tx.cart.create({
-          data: {
-            uid: uid,
-            pid: pid,
-            quantity: quantity,
-            price: price,
-            amount: new Prisma.Decimal(price * quantity),
-            status: true,
-          },
-        });
+      if (existingCartItem) {
+        throw new HttpException(
+          'Cart item already exists',
+          HttpStatus.CONFLICT,
+        );
       }
-      return cart;
-    });
 
-    return result;
+      const product = await this.getProduct(tx, pid);
+      const price: number = product.price.toNumber();
+
+      return tx.cart.create({
+        data: {
+          uid,
+          pid,
+          quantity,
+          price,
+          amount: new Prisma.Decimal(price * quantity),
+          status: true,
+        },
+      });
+    });
   }
 
+  async addToCart(dto: AddToCartDto) {
+    const { cid, pid, quantity } = dto;
+
+    return this.prisma.$transaction(async (tx) => {
+      const cartItem = await tx.cart.findFirst({
+        where: { cid, pid },
+      });
+
+      if (!cartItem) {
+        throw new HttpException(`Cart item not found`, HttpStatus.CONFLICT);
+      }
+
+      const product = await this.getProduct(tx, pid);
+      const price: number = product.price.toNumber();
+
+      const newQuantity = cartItem.quantity + quantity;
+      return tx.cart.update({
+        where: { cid: cartItem.cid },
+        data: {
+          quantity: newQuantity,
+          amount: new Prisma.Decimal(price * newQuantity),
+        },
+      });
+    });
+  }
+
+  /**
+   * Get the product by id
+   * @param tx
+   * @param pid
+   * @private
+   */
+  private async getProduct(
+    tx: Prisma.TransactionClient,
+    pid: number,
+  ): Promise<Product> {
+    const product = await tx.product.findUnique({ where: { pid } });
+    if (!product) {
+      throw new HttpException(
+        `The product with ${pid} not found`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return product;
+  }
+
+  /**
+   * Get cart by id
+   * @param cid
+   * @param includeProduct
+   */
   async getCart(cid: number, includeProduct: boolean = true) {
     const cart = await this.prisma.cart.findFirst({
       where: { cid: cid },
@@ -64,8 +99,10 @@ export class CartService {
     return cart;
   }
 
-  /*
-  Remove some quantity of the product from the cart
+  /**
+   * Remove/Update quantity of the product item from the cart
+   * @param cid
+   * @param removeItemDto
    */
   async removeItem(cid: number, removeItemDto: RemoveItemDto) {
     const result = await this.prisma.$transaction(async (tx) => {
@@ -96,19 +133,17 @@ export class CartService {
     return result;
   }
 
-  async closeCart(cid: number): Promise<CartDto> {
-    const result = await this.prisma.cart.update({
-      where: { cid: cid },
-      data: { status: false },
-    });
+  async closeCart(cid: number) {
+    try {
+      const result = await this.prisma.cart.update({
+        where: { cid: cid },
+        data: { status: false },
+      });
 
-    const cart = new CartDto();
-    // Convert prisma.decimal to number
-    Object.keys(result).map((value) => {
-      if (cart[value] instanceof Prisma.Decimal) {
-        cart[value] = cart[value].toNumber();
-      }
-    });
-    return cart;
+      return result;
+    } catch (error) {
+      // TODO: Response can have a vulnerability
+      throw new HttpException(`Cart doesn't exist`, HttpStatus.BAD_REQUEST);
+    }
   }
 }
