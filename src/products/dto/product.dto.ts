@@ -48,6 +48,7 @@ export class ProductDto {
   })
   sku: string;
 
+  @Type(() => Number)
   @ApiProperty({
     type: 'number',
     format: 'decimal',
@@ -59,7 +60,6 @@ export class ProductDto {
     { message: 'Price must be a number with up to 2 decimal places.' },
   )
   @IsPositive()
-  @Type(() => Number)
   // Ensures transformation from string if needed (e.g., from query params or form-data)
   price: number;
 
@@ -84,7 +84,7 @@ export class ProductDto {
 
   @IsInt()
   @Min(0)
-  @IsOptional({ message: 'It si default to 1 on create' })
+  @IsOptional({ message: 'It is  default to 1 on create' })
   quantity: number;
 
   @IsString()

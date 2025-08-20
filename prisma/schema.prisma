@@ -42,48 +42,36 @@ model Image {
 }
 
 model Product {
-  pid         Int        @id @default(autoincrement())
-  uuid        String     @unique @default(uuid()) @db.Uuid
-  title       String     @db.VarChar(64)
-  sku         String     @db.VarChar(64)
-  quantity    Int        @default(1) // TODO should always >= 0
-  price       Decimal    @db.Decimal(8, 2) // TODO Price also can be as Entity
-  description String?    @db.VarChar(2048)
+  pid         Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(64)
+  sku         String   @db.VarChar(64)
+  quantity    Int      @default(1) // TODO should always >= 0
+  price       Decimal  @db.Decimal(8, 2)
+  description String?  @db.VarChar(2048)
   photos      Image[]
-  status      Boolean    @default(true) @db.Boolean
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  CartItem    CartItem[]
+  status      Boolean  @default(true) @db.Boolean
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Cart        Cart[]
 
   @@index([pid, status]) // TODO consider add title to index
 }
 
 model Cart {
-  cid  Int    @id @default(autoincrement())
-  uuid String @unique @default(uuid()) @db.Uuid
-  uid  Int
-  user User   @relation(fields: [uid], references: [uid])
-
-  cartItems CartItem[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  status    Boolean    @default(true)
-
-  @@index([cid, status, uid])
-}
-
-model CartItem {
-  ci_id     Int      @id @default(autoincrement())
+  cid       Int      @id @default(autoincrement())
   uuid      String   @unique @default(uuid()) @db.Uuid
-  cid       Int
+  uid       Int
   pid       Int
+  price     Decimal  @db.Decimal(8, 2) // TODO: Should reflect product changes
   quantity  Int      @default(1)
-  price     Decimal  @db.Decimal(8, 2)
-  cart      Cart     @relation(fields: [cid], references: [cid], onDelete: Cascade)
-  product   Product  @relation(fields: [pid], references: [pid])
+  amount    Decimal  @default(0) @db.Decimal(8, 2) // TODO: quantity*price
+  user      User     @relation(fields: [uid], references: [uid], onDelete: Cascade)
+  product   Product  @relation(fields: [pid], references: [pid], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  status    Boolean  @default(true)
 
-  @@unique([cid, pid])
-  @@index([ci_id, pid])
+  @@unique([uid, pid]) // should be unique per user and product,change only quality
+  @@index([cid, status, uid])
 }
