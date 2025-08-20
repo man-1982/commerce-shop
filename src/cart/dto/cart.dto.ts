@@ -2,17 +2,18 @@ import { PartialType } from '@nestjs/swagger';
 
 import {
   IsBoolean,
+  IsDecimal,
   IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
   IsString,
-  MaxLength,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { Expose, Transform, Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger/dist/type-helpers/pick-type.helper';
 
 export class CartDto {
   @IsNumber()
@@ -40,24 +41,31 @@ export class CartDto {
   uid: number;
 
   @IsInt()
-  @Min(0)
-  @IsOptional({ message: 'It is  default to 1 on create' })
+  @Min(1)
   quantity: number;
 
-  @IsPositive()
   @Type(() => Number)
-  // Ensures transformation from string if needed (e.g., from query params or form-data)
+  @IsPositive()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  // It was my attempt to avoid Compile-tip[e error about prisma.decimal to number
+  // @Transform(({ value }) => {
+  //   if (value && typeof value.toNumber === 'function') {
+  //     return value.toNumber();
+  //   }
+  //   return value;
+  // }) // Transfor Prisma.decimal => number
   price: number;
 
+  @Type(() => Number) // type decorator should go first
   @IsPositive()
-  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
   // Ensures transformation from string if needed (e.g., from query params or form-data)
   amount: number;
 
   @IsNumber()
   @IsNotEmpty()
   @ApiProperty({
-    example: 11,
+    example: 2,
     description: 'The pid of the product in the cart.',
   })
   pid: number;
@@ -88,11 +96,25 @@ export class CartDto {
   updatedAt: Date;
 }
 
-export class CreateCartDto extends OmitType(CartDto, [
+export class CreateCartDto extends PickType(CartDto, [
+  'uid',
+  'pid',
+  'quantity',
+  // 'price',
+  // 'amount',
+] as const) {}
+export class AddToCartDto extends PickType(CartDto, [
   'cid',
-  'uuid',
-  'createdAt',
-  'updatedAt',
+  'uid',
+  'pid',
+  'quantity',
+  // 'price',
+  // 'amount',
 ] as const) {}
 
-export class UpdateCartDto extends PartialType(CreateCartDto) {}
+// By now it's pretty the same but in the future qoing to enhance
+export class RemoveItemDto extends PickType(CartDto, [
+  'cid',
+  'pid',
+  'quantity',
+] as const) {}
