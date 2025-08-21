@@ -6,6 +6,7 @@ import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import * as process from 'node:process';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import * as process from 'node:process';
       verboseMemoryLeak: process.env.NODE_ENV === 'development',
       ignoreErrors: process.env.NODE_ENV === 'development',
     }),
+    ImageModule,
   ],
   controllers: [],
   providers: [],
