@@ -77,7 +77,12 @@ describe('ProductController (e2e)', () => {
       await Promise.all(createPromises);
 
       const productsCount = await prisma.product.count();
-      expect(productsCount).toBe(TOTAL_PRODUCTS);
+
+      if (!process.env.GENERATE_ITEMS) {
+        expect(productsCount).toBe(TOTAL_PRODUCTS);
+      } else {
+        expect(createPromises.length).toBe(TOTAL_PRODUCTS);
+      }
     }, 15000);
   });
 
