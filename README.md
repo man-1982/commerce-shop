@@ -21,7 +21,7 @@ It uses :
 
 ### In Progress
 - 🚧 Image module (1st pass)
-- 🚧 Events & Emitters
+- 🚧 Events & Emitters: Cart, Product, User, Image
 - 🚧 Cart tests
 
 ### TODO
