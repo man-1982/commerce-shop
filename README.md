@@ -18,9 +18,10 @@ It uses :
 - ✅ Product tests
 - ✅ User tests
 - ✅ Prisma ORM setup
+- ✅ Image module: Emitters, Service, Controller, Swagger 
 
 ### In Progress
-- 🚧 Image module (1st pass)
+- 🚧 Image module: Simple tests
 - 🚧 Events & Emitters: Cart, Product, User, Image
 - 🚧 Cart tests
 
