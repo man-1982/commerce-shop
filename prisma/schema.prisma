@@ -33,7 +33,7 @@ model User {
 }
 
 model Image {
-  mid       Int     @id @default(autoincrement())
+  mid       Int     @id @default(autoincrement()) // media id
   uuid      String  @unique @default(uuid()) @db.Uuid
   imageData String
   title     String? @db.VarChar(64)
