@@ -21,7 +21,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:e2e:generate": "GENERATE_ITEMS=true jest --config ./test/jest-e2e.json "
+    "test:e2e:generate": "GENERATE_ITEMS=true npm run test:user && npm run test:product",
+    "test:user": "npm run test:e2e -- test/user/user.e2e-spec.ts",
+    "test:product": "npm run test:e2e -- test/product/product.e2e-spec.ts"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
