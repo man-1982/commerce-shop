@@ -12,6 +12,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    networks:
+      - shopnet
 
   api:
     image: node:22-alpine                       # use existing Node 22 image
@@ -32,6 +34,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - shopnet
+
+  prisma-studio:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-shop}
+    command: sh -c "npx prisma studio"
+    ports: ["5555:5555"]
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - shopnet
 
 networks:
   shopnet:
