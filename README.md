@@ -5,6 +5,29 @@ It uses :
     1. Prisma as the ORM. 
     2. PostgreSQL as database.
 
+## TODO List
+
+### Done
+- ✅ Project Init
+- ✅ User module (Simple implementation)
+- ✅ Swagger setup
+- ✅ Config setup
+- ✅ Docker composer (simple version)
+- ✅ Product module (1st pass)
+- ✅ Cart module (1st pass)
+- ✅ Product tests
+- ✅ User tests
+- ✅ Prisma ORM setup
+
+### In Progress
+- 🚧 Image module (1st pass)
+- 🚧 Events & Emitters
+- 🚧 Cart tests
+
+### TODO
+- 📝 Authentication & Authorization (JWT)
+- 📝 Logging and monitoring solution
+
 ## Modules
 
 The application is divided into the following modules:
