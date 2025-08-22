@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { UserDto, CreateUserDto, UpdateUserDto } from './dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(createUser: CreateUserDto): Promise<UserDto> {
-    return this.prisma.user.create({ data: createUser });
+    const newUser = await this.prisma.user.create({ data: createUser });
+    this.eventEmitter.emit('user.created', newUser);
+    return newUser;
   }
 
   async findById(id: number): Promise<UserDto | null> {
@@ -15,14 +21,17 @@ export class UserService {
   }
 
   async update(id: number, updateUser: UpdateUserDto): Promise<UserDto> {
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { uid: id },
       data: updateUser,
     });
+    this.eventEmitter.emit('user.updated', updatedUser);
+    return updatedUser;
   }
 
   async remove(id: number): Promise<null> {
-    await this.prisma.user.delete({ where: { uid: id } });
+    const deletedUser = await this.prisma.user.delete({ where: { uid: id } });
+    this.eventEmitter.emit('user.deleted', deletedUser);
     return null;
   }
 }

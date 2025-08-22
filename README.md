@@ -20,15 +20,40 @@ It uses :
 - ✅ Prisma ORM setup
 - ✅ Image module: Emitters, Service, Controller, Swagger 
 - ✅ Image module: Simple tests
+- ✅ Events & Emitters: Cart, Product, User, Image
 
 ### In Progress
-- 🚧 Events & Emitters: Cart, Product, User, Image
+
 - 🚧 Cart tests
 - 🚧 Add tests data (some JSON data and separate comand to fill put the DB using these datasets)
 
 ### TODO
 - 📝 Authentication & Authorization (JWT)
 - 📝 Logging and monitoring solution
+
+
+## Emmiters
+
+`src/cart/cart.service.ts`
+- **cart.created**: cart is created.
+- **cart.items.updated**: cart are updated.
+- **cart.closed**: cart is closed.
+- **cart.deleted**: cart is deleted.
+
+`src/image/image.service.ts`
+- **image.created:** image is created.
+- **image.updated**:  image is updated.
+- **image.deleted**:  image is deleted.
+
+`src/products/products.service.ts`
+- **product.created**: product is created.
+- **product.updated**: product is updated.
+- **product.deleted**: product is deleted.
+
+`src/user/user.service.ts`
+- **user.created**: user is created.
+- **user.updated**: user is updated.
+- **user.deleted**: user is deleted.
 
 ## Modules
 
