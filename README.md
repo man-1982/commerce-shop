@@ -20,19 +20,20 @@ It uses :
 - ✅ Prisma ORM setup
 - ✅ Image module: Emitters, Service, Controller, Swagger 
 - ✅ Image module: Simple tests
-- ✅ Events & Emitters: Cart, Product, User, Image
+- ✅ Events & Emitters: Cart, Product, User, Image - 2 pass
+- ✅ Dummy data (seed) and some improvements
 
-### In Progress
-
-- 🚧 Cart tests
-- 🚧 Add tests data (some JSON data and separate comand to fill put the DB using these datasets)
 
 ### TODO
+- 📝 Subscriptions on events (emitters)
 - 📝 Authentication & Authorization (JWT)
-- 📝 Logging and monitoring solution
+- 📝 Prisma log
+- 📝 Monitoring
+- 📝 Build optimisation
+- 📝 Separate DB for the tests
 
 
-## Emmiters
+## Emitters
 
 `src/cart/cart.service.ts`
 - **cart.created**: cart is created.
@@ -62,62 +63,57 @@ The application is divided into the following modules:
 - **User:** Handles user authentication, registration, and management.
 - **Products:** Manages the product catalog, including creating, updating, and retrieving product information.
 - **Cart:** Manages the shopping cart functionality for users.
+- **Image:** Manages the images  for products.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v22 or higher)
-- npm
-- Docker and Docker Compose
+- [Node.js](https://nodejs.org/) (v22 or higher)
+- [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/)
 
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/man-1982/commerce-shop.git
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-### Running the Application with Docker Compose
-
-1. Use exisiting or create a new `.env` file in the root of the project with the content from .env.example:
-
-
-2.  Run the application using Docker Compose:
-
-    ```bash
-    docker-compose up -d
-    ```
-3. Run Prisma studio to DB access
-
-     ```bash
-      prisma studio
-    ```
-
-4. Swagger API documentation is available at:
-
-http://localhost:3333/api/docs#/
-
-This will start the NestJS application and a PostgreSQL database.
-
-## Generating Dummy Data
-
-You can generate dummy data for users and products by running the end-to-end tests. Set the `GENERATE_ITEMS` environment variable to prevent the tests from cleaning up the database before running.
+###  Clone the Repository
 
 ```bash
-    test:e2e:generate 
+    git clone https://github.com/man-1982/commerce-shop.git
+    cd commerce-shop
 ```
-This command will populate the database with sample data, which can be useful for development and testing purposes.
-
-## Events
 
 
-## Emitters
+###  Firsts start
 
+  ```bash
+      docker compose up -d
+  ```
+#### How to run prisma:seed under Docker
+
+You can seed the database from inside the running application container. Replace <SERVICE_NAME> with your app service name from docker-compose.yml (for example, app or api).
+
+Run inside the running container:
+  ```bash
+      docker compose exec api npm run prisma:seed
+  ```
+OR localy through u terminal
+
+  ```bash
+      npm run prisma:seed
+  ```
+This will create 10 users, 20 products, and some images for the products.
+
+Also, you can run test with a GENERATE_ITEMS key 
+
+  ```bash
+      npm run test:e2e:generate
+  ```
+
+
+
+### Accessing the API and Database
+
+- **Swagger API Documentation**: 
+    [http://localhost:3333/api/docs](http://localhost:3333/api/docs)
+- **Prisma Studio** (Database GUI):
+Prisma studio has its own container and it available at [http://localhost:5555](http://localhost:5555).
 
 
 
