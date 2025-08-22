@@ -1,21 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { CreateProductDto, ProductDto, UpdateProductDto } from './dto';
-import { PrismaService } from '../prisma/prisma.service';
-import { Product } from '@prisma/client';
+import { CreateProductDto, UpdateProductDto } from './dto';
+import { PrismaService, Product } from '../prisma/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(product: CreateProductDto): Promise<Product> {
-    return this.prisma.product.create({ data: product });
+    const newProduct = await this.prisma.product.create({ data: product });
+    this.eventEmitter.emit('product.created', newProduct);
+    return newProduct;
   }
 
   async updateById(pid: number, product: UpdateProductDto): Promise<Product> {
-    return this.prisma.product.update({
+    const updatedProduct = await this.prisma.product.update({
       where: { pid: pid },
       data: product,
     });
+    this.eventEmitter.emit('product.updated', updatedProduct);
+    return updatedProduct;
   }
   async findById(pid: number): Promise<Product | null> {
     return this.prisma.product.findFirst({
@@ -27,6 +34,7 @@ export class ProductsService {
     const product = await this.prisma.product.delete({
       where: { pid: pid },
     });
+    this.eventEmitter.emit('product.deleted', product);
     return null;
   }
 }

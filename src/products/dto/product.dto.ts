@@ -10,7 +10,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 
 // TODO Some intresting hack with declare.
 export class ProductDto {
@@ -116,3 +116,9 @@ export class UpdateProductDto extends OmitType(ProductDto, [
   'createdAt',
   'updatedAt',
 ] as const) {}
+export class ProductResponseDto extends PickType(ProductDto, [
+  'title',
+  'description',
+  'price',
+  'sku',
+]) {}
