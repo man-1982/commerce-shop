@@ -45,6 +45,7 @@ describe('ProductController (e2e)', () => {
 
     productCounter = 0;
     if (!process.env.GENERATE_ITEMS) {
+      await prisma.image.deleteMany({});
       await prisma.product.deleteMany({});
     }
   });

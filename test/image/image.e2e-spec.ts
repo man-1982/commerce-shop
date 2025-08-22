@@ -7,6 +7,8 @@ import { CreateImageDto, UpdateImageDto } from '../../src/image/dto';
 import { Product } from '@prisma/client';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
+import * as process from 'node:process';
+import { json, urlencoded } from 'express';
 
 describe('ImageController (e2e)', () => {
   let app: INestApplication;
@@ -21,6 +23,13 @@ describe('ImageController (e2e)', () => {
     };
   };
 
+  const TOTAL_IMAGES = 10;
+  const postImage = async (dto: CreateImageDto) =>
+    await request(app.getHttpServer())
+      .post('/images')
+      .send(dto)
+      .expect(HttpStatus.CREATED);
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -34,8 +43,10 @@ describe('ImageController (e2e)', () => {
 
   beforeEach(async () => {
     // Clean up database before each test
-    await prisma.image.deleteMany({});
-    await prisma.product.deleteMany({});
+    if (!process.env.GENERATE_ITEMS) {
+      await prisma.image.deleteMany({});
+      await prisma.product.deleteMany({});
+    }
 
     // Create a product to associate images with
     testProduct = await prisma.product.create({
@@ -49,8 +60,10 @@ describe('ImageController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.image.deleteMany({});
-    await prisma.product.deleteMany({});
+    if (!process.env.GENERATE_ITEMS) {
+      await prisma.image.deleteMany({});
+      await prisma.product.deleteMany({});
+    }
     await app.close();
   });
 
@@ -67,6 +80,23 @@ describe('ImageController (e2e)', () => {
           expect(res.body.title).toBe(dto.title);
           expect(res.body.pid).toBe(testProduct.pid);
         });
+    });
+
+    it(`should create ${TOTAL_IMAGES} images`, async () => {
+      const createPromises: Array<Promise<request.Response>> = Array.from(
+        { length: TOTAL_IMAGES },
+        () => postImage(createTestImageDto(testProduct.pid)),
+      );
+
+      await Promise.all(createPromises);
+
+      const imagesCount = await prisma.image.count();
+
+      if (!process.env.GENERATE_ITEMS) {
+        expect(imagesCount).toBe(TOTAL_IMAGES);
+      } else {
+        expect(createPromises.length).toBe(TOTAL_IMAGES);
+      }
     });
 
     it('should fail to create an image for a non-existent product', () => {
