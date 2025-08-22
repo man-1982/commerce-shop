@@ -24,7 +24,8 @@
     "test:e2e:generate": "GENERATE_ITEMS=true npm run test:user && npm run test:product && npm run test:image",
     "test:user": "npm run test:e2e -- test/user/user.e2e-spec.ts",
     "test:product": "npm run test:e2e -- test/product/product.e2e-spec.ts",
-    "test:image": "npm run test:e2e -- test/image/image.e2e-spec.ts"
+    "test:image": "npm run test:e2e -- test/image/image.e2e-spec.ts",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
