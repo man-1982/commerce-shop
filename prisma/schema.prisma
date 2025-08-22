@@ -8,7 +8,7 @@ generator client {
   provider = "prisma-client-js"
   //  only needed for the "prisma-client"
   // @see https://www.prisma.io/docs/orm/prisma-schema/overview/generators
-  // output   = "../generated/prisma"
+  output   = "../generated/prisma"
 }
 
 datasource db {

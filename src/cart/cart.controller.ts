@@ -19,7 +19,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AddToCartDto, CreateCartDto, RemoveItemDto } from './dto';
-import { Cart } from '@prisma/client';
+import { Cart } from '../prisma/prisma.service';
 
 @ApiTags('Cart')
 @Controller('cart')
