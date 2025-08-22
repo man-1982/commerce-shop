@@ -10,12 +10,21 @@ export class ProductsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
+  /**
+   * Create new product
+   * @param product
+   */
   async create(product: CreateProductDto): Promise<Product> {
     const newProduct = await this.prisma.product.create({ data: product });
     this.eventEmitter.emit('product.created', newProduct);
     return newProduct;
   }
 
+  /**
+   * Update product details
+   * @param pid
+   * @param product
+   */
   async updateById(pid: number, product: UpdateProductDto): Promise<Product> {
     const updatedProduct = await this.prisma.product.update({
       where: { pid: pid },
@@ -30,11 +39,28 @@ export class ProductsService {
     });
   }
 
+  /**
+   * Deleted product by pi
+   * @param pid
+   */
   async deleteById(pid: number): Promise<null> {
     const product = await this.prisma.product.delete({
       where: { pid: pid },
     });
     this.eventEmitter.emit('product.deleted', product);
     return null;
+  }
+
+  /**
+   * Update product stock/quantity
+   * @param pid
+   * @param quantity
+   */
+  async updateQuantity(pid: number, quantity: number): Promise<Product> {
+    //console.log(`Updating product ${pid} with quantity ${quantity}`);
+    return this.prisma.product.update({
+      where: { pid: pid },
+      data: { quantity: quantity },
+    });
   }
 }
