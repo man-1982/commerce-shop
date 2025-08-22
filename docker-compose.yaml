@@ -29,7 +29,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     # Enable corepack, activate pnpm@packageManager, install deps, start Nest dev server
     command: >
-      sh -c "npm ci && npm run start:dev"
+      sh -c "npm ci  && npm run build && npm run start"
     ports: ["${PORT}:${PORT}"]
     depends_on:
       db:
