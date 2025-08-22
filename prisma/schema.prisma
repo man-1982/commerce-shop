@@ -8,7 +8,7 @@ generator client {
   provider = "prisma-client-js"
   //  only needed for the "prisma-client"
   // @see https://www.prisma.io/docs/orm/prisma-schema/overview/generators
-  output   = "../generated/prisma"
+  // output   = "../generated/prisma"
 }
 
 datasource db {
@@ -37,8 +37,10 @@ model Image {
   uuid      String  @unique @default(uuid()) @db.Uuid
   imageData String
   title     String? @db.VarChar(64)
-  product   Product @relation(fields: [pid], references: [pid])
+  product   Product @relation(fields: [pid], references: [pid], onDelete: Cascade)
   pid       Int
+
+  @@index([pid])
 }
 
 model Product {
