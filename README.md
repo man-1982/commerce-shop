@@ -19,11 +19,12 @@ It uses :
 - ✅ User tests
 - ✅ Prisma ORM setup
 - ✅ Image module: Emitters, Service, Controller, Swagger 
+- ✅ Image module: Simple tests
 
 ### In Progress
-- 🚧 Image module: Simple tests
 - 🚧 Events & Emitters: Cart, Product, User, Image
 - 🚧 Cart tests
+- 🚧 Add tests data (some JSON data and separate comand to fill put the DB using these datasets)
 
 ### TODO
 - 📝 Authentication & Authorization (JWT)
