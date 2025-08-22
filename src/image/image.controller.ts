@@ -41,6 +41,10 @@ export class ImageController {
     status: HttpStatus.NOT_FOUND,
     description: 'Product not found.',
   })
+  @ApiResponse({
+    status: HttpStatus.PAYLOAD_TOO_LARGE,
+    description: 'The image too large. Limitation under 1Mb',
+  })
   create(@Body() createImageDto: CreateImageDto) {
     return this.imageService.create(createImageDto);
   }
