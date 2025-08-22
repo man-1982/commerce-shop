@@ -140,6 +140,6 @@ export class CartController {
     description: 'Cart not found',
   })
   async deleteCart(@Param('cid', ParseIntPipe) cid: number): Promise<void> {
-    this.cartService.deleteCart(cid);
+    await this.cartService.deleteCart(cid);
   }
 }
