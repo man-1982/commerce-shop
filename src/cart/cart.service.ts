@@ -177,16 +177,23 @@ export class CartService {
    * @param cid
    */
   async deleteCart(cid: number): Promise<void> {
-    const cart = await this.getCart(cid);
-    const deletedCart = await this.prisma.cart.delete({
+    const cartItems = await this.prisma.cart.findMany({
+      where: { cid: cid },
+      select: {
+        pid: true,
+        quantity: true,
+      },
+    });
+
+    if (cartItems.length === 0) {
+      throw new HttpException('Cart not found', HttpStatus.NOT_FOUND);
+    }
+
+    await this.prisma.cart.deleteMany({
       where: { cid: cid },
     });
-    const cartDto: CartDto = {
-      ...cart,
-      price: cart.price.toNumber(),
-      amount: cart.amount.toNumber(),
-    };
+
     // Notification: Cart deleted
-    this.eventEmitter.emit('cart.deleted', { cart: cartDto });
+    this.eventEmitter.emit('cart.deleted', { items: cartItems });
   }
 }
