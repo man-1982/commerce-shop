@@ -10,16 +10,10 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import {
-  ApiBody,
-  ApiExtraModels,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
-import { CreateProductDto, ProductDto, UpdateProductDto } from './dto';
-import { Product } from '@prisma/client';
+import { CreateProductDto, UpdateProductDto } from './dto';
+import { Product } from '../prisma/prisma.service';
 
 @ApiTags('products')
 @Controller('products')
@@ -78,7 +72,6 @@ export class ProductsController {
   @Delete(':pid')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete product by pid' })
-  @ApiExtraModels(ProductDto)
   @ApiParam({ name: 'pid', required: true, description: 'Product id' })
   deleteById(@Param('pid', new ParseIntPipe({})) pid: number): Promise<null> {
     return this.products.deleteById(pid);
