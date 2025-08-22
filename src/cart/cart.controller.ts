@@ -100,7 +100,7 @@ export class CartController {
     type: RemoveItemDto,
     description: 'Remove product from the cart by product id.',
   })
-  @Delete(':cid/item')
+  @Patch('remove/:cid')
   removeItem(
     @Param('cid', ParseIntPipe) cid: number,
     @Body() removeItemDto: RemoveItemDto,
