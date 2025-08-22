@@ -44,6 +44,10 @@ export class UserController {
     return this.userService.create(createUser);
   }
 
+  /**
+   * Get user by uid
+   * @param id
+   */
   @Get(':uid')
   findById(
     @Param('uid', new ParseIntPipe()) id: number,
@@ -51,7 +55,11 @@ export class UserController {
     return this.userService.findById(id);
   }
 
-  // TODO Add custom error handler
+  /**
+   * Update user
+   * @param id
+   * @param updateUser
+   */
   @Patch(':uid')
   @HttpCode(HttpStatus.CREATED)
   @ApiBody({
@@ -67,6 +75,10 @@ export class UserController {
     return this.userService.update(id, updateUser);
   }
 
+  /**
+   * Delete user
+   * @param id
+   */
   @Delete(':uid')
   @ApiExtraModels(CreateUserDto)
   @HttpCode(HttpStatus.NO_CONTENT)
