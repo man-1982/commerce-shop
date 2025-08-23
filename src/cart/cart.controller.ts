@@ -19,7 +19,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AddToCartDto, CreateCartDto, RemoveItemDto } from './dto';
-import { Cart } from '../prisma/prisma.service';
+import { type Cart } from '../prisma/prisma.service';
 
 @ApiTags('Cart')
 @Controller('cart')
@@ -100,11 +100,11 @@ export class CartController {
     type: RemoveItemDto,
     description: 'Remove product from the cart by product id.',
   })
-  @Delete(':cid/item')
+  @Patch('remove/:cid')
   removeItem(
     @Param('cid', ParseIntPipe) cid: number,
     @Body() removeItemDto: RemoveItemDto,
-  ) {
+  ): Promise<Cart> {
     return this.cartService.removeItem(cid, removeItemDto);
   }
 
@@ -140,6 +140,6 @@ export class CartController {
     description: 'Cart not found',
   })
   async deleteCart(@Param('cid', ParseIntPipe) cid: number): Promise<void> {
-    this.cartService.deleteCart(cid);
+    await this.cartService.deleteCart(cid);
   }
 }
