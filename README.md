@@ -22,6 +22,8 @@ It uses :
 - ✅ Image module: Simple tests
 - ✅ Events & Emitters: Cart, Product, User, Image - 2 pass
 - ✅ Dummy data (seed) and some improvements
+- ✅ Subscription for products on cart emmiters: update stock
+- ✅ Enhanced cart test to verify emitters and product subscriptions
 
 
 ### TODO
@@ -85,6 +87,11 @@ The application is divided into the following modules:
   ```bash
       docker compose up -d
   ```
+[http://localhost:3333/api/docs](http://localhost:3333/api/docs)
+
+[http://localhost:5555](http://localhost:5555)
+
+
 #### How to run prisma:seed under Docker
 
 You can seed the database from inside the running application container. Replace <SERVICE_NAME> with your app service name from docker-compose.yml (for example, app or api).
@@ -135,9 +142,21 @@ $ npm run start:prod
 ### Run tests
 
 ```bash
-# unit tests
-$ npm run test
+  npm run test:user    # Run user module tests
+```
 
+```bash
+  npm run test:product # Run product module tests
+```
+
+```bash
+  npm run test:image   # Run image module tests
+```
+```bash
+  npm run test:cart    # Run cart module tests
+```
+
+```bash
 # e2e tests
-$ npm run test:e2e
+ npm run test:e2e
 ```
