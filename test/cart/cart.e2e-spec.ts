@@ -292,90 +292,107 @@ describe('CartController (e2e)', () => {
     });
   });
 
-  describe('Update product stock when add/remove product from cart', () => {
-    it('Should decrease product stock when add to cart', async () => {
-      const product = await createTestProduct();
-      const stockChange = 3;
+  describe('Create new cart. Add item. Remove particular item. Remove remain item quantity', () => {
+    it('should update product stock when adding/removing items in cart', async () => {
+      // Define constants for all quantities used in test
+      const INITIAL_PRODUCT_QUANTITY = 5;
+      const CART_ADD_QUANTITY = 5;
+      const CART_REMOVE_FIRST = 3;
+      const CART_REMOVE_SECOND = 2;
+      console.log(
+        `1. Create a product with quantity/stock ${INITIAL_PRODUCT_QUANTITY}`,
+      );
+      // 1. Create a product with quantity/stock 5
+      const product = await prisma.product.create({
+        data: {
+          title: 'Stock Test Product',
+          sku: 'STOCK-SKU-001',
+          price: 100.0,
+          quantity: INITIAL_PRODUCT_QUANTITY,
+        },
+      });
+
+      // 2. using existing "user"
+      console.log(`2. Using exisiting user  ${user.uid}`);
+
+      console.log(
+        `3. Add product to cart  ${product.pid} quantity: ${CART_ADD_QUANTITY}`,
+      );
+      // 3. Add product to cart
       const createCartDto: CreateCartDto = {
         uid: user.uid,
         pid: product.pid,
-        quantity: stockChange,
+        quantity: CART_ADD_QUANTITY,
       };
-
-      console.log(
-        `Create new cart with quantity: ${stockChange} and product: ${product.pid}`,
-      );
-      const addProductToCartRes = await request(app.getHttpServer())
+      const createRes = await request(app.getHttpServer())
         .post('/cart')
         .send(createCartDto)
-        .expect(HttpStatus.CREATED)
-        .then((res) => {
-          expect(res.body.quantity).toBe(stockChange);
-          expect(res.body.cid).toBeDefined();
-        });
+        .expect(HttpStatus.CREATED);
 
-      console.log(`Check product: ${product.pid} stock after add to cart `);
-      const getProductById = await request(app.getHttpServer())
-        .get(`/products/${product.pid}`)
-        .expect(HttpStatus.OK)
-        .then((res) => {
-          expect(res.body).toBeDefined();
-          expect(res.body.quantity).toBe(product.quantity - stockChange);
-          return res.body;
-        });
-    });
+      const cartId = createRes.body.cid;
 
-    it('Should increase product stock when remove items from cart', async () => {
-      const product = await createTestProduct();
-      const productStockStart = product.quantity;
-      const stockChange = 3;
-      const createCartDto: CreateCartDto = {
-        uid: user.uid,
+      // 4. Check the product stock should be 0
+      const productAfterAdd = await prisma.product.findUnique({
+        where: { pid: product.pid },
+        select: { quantity: true },
+      });
+      expect(productAfterAdd?.quantity).toBe(
+        INITIAL_PRODUCT_QUANTITY - CART_ADD_QUANTITY,
+      );
+
+      // 5. Check cart for this product. In cart should be 5.
+      const cartAfterAdd = await request(app.getHttpServer())
+        .get(`/cart/${cartId}`)
+        .expect(HttpStatus.OK);
+      expect(cartAfterAdd.body.quantity).toBe(CART_ADD_QUANTITY);
+
+      // 6. Remove this product from cart with quantity 3
+      const removeFirstDto: RemoveItemDto = {
         pid: product.pid,
-        quantity: stockChange,
+        quantity: CART_REMOVE_FIRST,
       };
+      await request(app.getHttpServer())
+        .patch(`/cart/remove/${cartId}`)
+        .send(removeFirstDto)
+        .expect(HttpStatus.OK);
 
-      console.log(
-        `Create new cart with quantity: ${stockChange} and product: ${product.pid}`,
+      // 7. Check the cart. in the cart should be 5-3 = 2
+      const cartAfterRemoveFirst = await request(app.getHttpServer())
+        .get(`/cart/${cartId}`)
+        .expect(HttpStatus.OK);
+      expect(cartAfterRemoveFirst.body.quantity).toBe(
+        CART_ADD_QUANTITY - CART_REMOVE_FIRST,
       );
-      const newCartEntry = await request(app.getHttpServer())
-        .post('/cart')
-        .send(createCartDto)
-        .expect(HttpStatus.CREATED)
-        .then((res) => {
-          expect(res.body.quantity).toBe(stockChange);
-          expect(res.body.cid).toBeDefined();
-          return res.body;
-        });
 
-      // remove prodcut
-      const removeProductFromCart = await request(app.getHttpServer())
-        .patch(`/cart/remove/${newCartEntry.cid}`)
-        .send(createCartDto)
-        .expect(HttpStatus.OK)
-        .then((res) => {
-          expect(res.body.quantity).toBe(0);
-          expect(res.body.cid).toBeDefined();
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      // 8. CHECK the product quantity it should be 3.
+      const productAfterRemoveFirst = await prisma.product.findUnique({
+        where: { pid: product.pid },
+        select: { quantity: true },
+      });
+      expect(productAfterRemoveFirst?.quantity).toBe(CART_REMOVE_FIRST);
 
-      console.log(
-        `Check product: ${product.pid} stock after remove from cart `,
+      // 9. Remove 2 from cart. it should be 0 for this product in the cart.
+      const removeSecondDto: RemoveItemDto = {
+        pid: product.pid,
+        quantity: CART_REMOVE_SECOND,
+      };
+      await request(app.getHttpServer())
+        .patch(`/cart/remove/${cartId}`)
+        .send(removeSecondDto)
+        .expect(HttpStatus.OK);
+
+      const cartAfterRemoveAll = await request(app.getHttpServer())
+        .get(`/cart/${cartId}`)
+        .expect(HttpStatus.OK);
+      expect(cartAfterRemoveAll.body.quantity).toBe(
+        CART_ADD_QUANTITY - CART_REMOVE_FIRST - CART_REMOVE_SECOND,
       );
-      //compare current product stock with start stock
-      const getProductById = await request(app.getHttpServer())
+
+      // 10. Check the product it should be 5
+      const productResponse = await request(app.getHttpServer())
         .get(`/products/${product.pid}`)
-        .expect(HttpStatus.OK)
-        .then((res) => {
-          expect(res.body).toBeDefined();
-          expect(res.body.quantity).toBe(productStockStart);
-        });
-    });
-
-    it('Should increase product stock when close the cart', async () => {
-      // Empty by now @see  @OnEvent('cart.closed', { async: true })
+        .expect(HttpStatus.OK);
+      expect(productResponse.body.quantity).toBe(INITIAL_PRODUCT_QUANTITY);
     });
   });
 });
