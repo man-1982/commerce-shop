@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService, Product, Prisma } from '../prisma/prisma.service';
 import { AddToCartDto, CartDto, CreateCartDto, RemoveItemDto } from './dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { type Cart } from '@prisma/client';
 
 @Injectable()
 export class CartService {
@@ -137,7 +138,7 @@ export class CartService {
    * @param cid
    * @param removeItemDto
    */
-  async removeItem(cid: number, removeItemDto: RemoveItemDto) {
+  async removeItem(cid: number, removeItemDto: RemoveItemDto): Promise<Cart> {
     const result = await this.prisma.$transaction(async (tx) => {
       const cartByProduct = await tx.cart.findFirst({
         where: { cid: cid, pid: removeItemDto.pid },
