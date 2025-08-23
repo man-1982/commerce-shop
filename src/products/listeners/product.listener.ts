@@ -14,7 +14,7 @@ export class ProductListener {
   async handleCartItemsUpdated(event: {
     item: { pid: number; quantity: number };
   }) {
-    const updatedProduct = await this.productsService.updateQuantity(
+    const updatedProduct = await this.productsService.updateProductStock(
       event.item.pid,
       -event.item.quantity,
     );
@@ -31,7 +31,7 @@ export class ProductListener {
   }) {
     // TODO: Improve to execute at one query
     for (const item of event.items) {
-      await this.productsService.updateQuantity(item.pid, item.quantity);
+      await this.productsService.updateProductStock(item.pid, item.quantity);
     }
   }
 
