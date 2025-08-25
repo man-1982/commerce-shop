@@ -52,25 +52,25 @@ export class ProductsService {
   }
 
   /**
-   * Update product stock/quantity
+   * Update product stock/stock
    * @param pid
    * @param stockChange
    */
   async updateProductStock(pid: number, stockChange: number): Promise<Product> {
     const product = await this.prisma.product.findUnique({
       where: { pid: pid },
-      select: { quantity: true },
+      select: { stock: true },
     });
 
     if (!product) {
       throw new Error(`Product with ID ${pid} not found.`);
     }
 
-    const newQuantity = product.quantity + stockChange;
+    const newStock = product.stock + stockChange;
 
     return this.prisma.product.update({
       where: { pid: pid },
-      data: { quantity: newQuantity },
+      data: { stock: newStock },
     });
   }
 }
