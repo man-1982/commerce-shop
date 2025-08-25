@@ -33,7 +33,7 @@ async function main() {
         sku: faker.string.alphanumeric(10),
         price: faker.commerce.price(),
         description: faker.commerce.productDescription(),
-        quantity: faker.number.int({ min: 1, max: 100 }),
+        stock: faker.number.int({ min: 1, max: 100 }),
       },
     });
     products.push(product);

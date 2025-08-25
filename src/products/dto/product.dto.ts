@@ -84,8 +84,8 @@ export class ProductDto {
 
   @IsInt()
   @Min(0)
-  @IsOptional({ message: 'It is  default to 1 on create' })
-  quantity: number;
+  @IsOptional({ message: 'Stock is  default to 1 on create' })
+  stock: number;
 
   @IsString()
   @IsNotEmpty()

@@ -21,7 +21,7 @@ describe('CartController (e2e)', () => {
       sku: `TEST-SKU-${productCounter}`,
       description: `Test Description ${productCounter}`,
       price: 100.12 + productCounter,
-      quantity: 10 + productCounter,
+      stock: 10 + productCounter,
     };
   };
 
@@ -295,12 +295,12 @@ describe('CartController (e2e)', () => {
   describe('Create new cart. Add item. Remove particular item. Remove remain item quantity', () => {
     it('should update product stock when adding/removing items in cart', async () => {
       // Define constants for all quantities used in test
-      const INITIAL_PRODUCT_QUANTITY = 5;
+      const INITIAL_PRODUCT_STOCK = 5;
       const CART_ADD_QUANTITY = 5;
       const CART_REMOVE_FIRST = 3;
       const CART_REMOVE_SECOND = 2;
       console.log(
-        `1. Create a product with quantity/stock ${INITIAL_PRODUCT_QUANTITY}`,
+        `1. Create a product with quantity/stock ${INITIAL_PRODUCT_STOCK}`,
       );
       // 1. Create a product with quantity/stock 5
       const product = await prisma.product.create({
@@ -308,7 +308,7 @@ describe('CartController (e2e)', () => {
           title: 'Stock Test Product',
           sku: 'STOCK-SKU-001',
           price: 100.0,
-          quantity: INITIAL_PRODUCT_QUANTITY,
+          stock: INITIAL_PRODUCT_STOCK,
         },
       });
 
@@ -334,10 +334,10 @@ describe('CartController (e2e)', () => {
       // 4. Check the product stock should be 0
       const productAfterAdd = await prisma.product.findUnique({
         where: { pid: product.pid },
-        select: { quantity: true },
+        select: { stock: true },
       });
-      expect(productAfterAdd?.quantity).toBe(
-        INITIAL_PRODUCT_QUANTITY - CART_ADD_QUANTITY,
+      expect(productAfterAdd?.stock).toBe(
+        INITIAL_PRODUCT_STOCK - CART_ADD_QUANTITY,
       );
 
       // 5. Check cart for this product. In cart should be 5.
@@ -367,9 +367,9 @@ describe('CartController (e2e)', () => {
       // 8. CHECK the product quantity it should be 3.
       const productAfterRemoveFirst = await prisma.product.findUnique({
         where: { pid: product.pid },
-        select: { quantity: true },
+        select: { stock: true },
       });
-      expect(productAfterRemoveFirst?.quantity).toBe(CART_REMOVE_FIRST);
+      expect(productAfterRemoveFirst?.stock).toBe(CART_REMOVE_FIRST);
 
       // 9. Remove 2 from cart. it should be 0 for this product in the cart.
       const removeSecondDto: RemoveItemDto = {
@@ -392,7 +392,7 @@ describe('CartController (e2e)', () => {
       const productResponse = await request(app.getHttpServer())
         .get(`/products/${product.pid}`)
         .expect(HttpStatus.OK);
-      expect(productResponse.body.quantity).toBe(INITIAL_PRODUCT_QUANTITY);
+      expect(productResponse.body.stock).toBe(INITIAL_PRODUCT_STOCK);
     });
   });
 });

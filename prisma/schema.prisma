@@ -48,7 +48,7 @@ model Product {
   uuid        String   @unique @default(uuid()) @db.Uuid
   title       String   @db.VarChar(64)
   sku         String   @db.VarChar(64)
-  quantity    Int      @default(1) // TODO should always >= 0
+  stock       Int      @default(1) // TODO should always >= 0
   price       Decimal  @db.Decimal(8, 2)
   description String?  @db.VarChar(2048)
   photos      Image[]
