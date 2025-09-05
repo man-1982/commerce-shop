@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { CqrsModule } from '@nestjs/cqrs';
 import * as process from 'node:process';
 import { ImageModule } from './image/image.module';
 
@@ -19,6 +20,7 @@ import { ImageModule } from './image/image.module';
       verboseMemoryLeak: process.env.NODE_ENV === 'development',
       ignoreErrors: process.env.NODE_ENV === 'development',
     }),
+    CqrsModule.forRoot(),
     ImageModule,
   ],
   controllers: [],
